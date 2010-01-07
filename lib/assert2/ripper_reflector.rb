@@ -1,7 +1,7 @@
 require 'pp'
 require 'ripper'  #   note we only work with Ruby >= 1.9 !
 
-module Test; module Unit; module Assertions
+module Assert2
 
   class RubyReflector  #  this class turns hamburger back into live cattle
     HAS_RUBYNODE = false
@@ -722,5 +722,5 @@ module Test; module Unit; module Assertions
 
   end
   
-end; end; end
+end
 

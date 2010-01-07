@@ -1,7 +1,7 @@
 require 'pp'
 
 
-module Test; module Unit; module Assertions
+module Assert2
 
   # ERGO
   #     :bmethod      => [:cval],
@@ -844,7 +844,7 @@ p node
 
   end
 
-end; end; end
+end
 
 unless [].respond_to? :in_groups_of
   class Array

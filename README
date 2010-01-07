@@ -1,7 +1,7 @@
 The assert{ 2.0 } project asks a simple question:
 
-  How the leanest possible assertions 
-  can yield the maximum diagnostics?
+  How can the leanest possible assertions
+  yield the maximum diagnostics?
 
 Its latest assertion, assert_xhtml, answers this question for HTML.
 

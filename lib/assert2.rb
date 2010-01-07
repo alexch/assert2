@@ -1,7 +1,7 @@
 require 'test/unit'
 
 #  FIXME  the first failing assertion of a batch should suggest you get with Ruby1.9...
-#  TODO  install Coulor (flibberty) 
+#  TODO  install Coulor (flibberty)
 #  TODO  add :verbose => option to assert{}
 #  TODO  pay for Staff Benda Bilili  ALBUM: Tr�s Tr�s Fort (Promo Sampler) !
 #  TODO  evaluate parts[3]
@@ -26,7 +26,7 @@ end
 
 #  CONSIDER  fix if an assertion contains more than one command - reflect it all!
 
-module Test; module Unit; module Assertions
+module Assert2
 
   FlunkError = if defined? Test::Unit::AssertionFailedError
                  Test::Unit::AssertionFailedError
@@ -36,49 +36,15 @@ module Test; module Unit; module Assertions
 
   def add_diagnostic(whatever = nil, &block)
     @__additional_diagnostics ||= []  #  TODO move that inside the reflector object, and persist it thru a test case event
-    
+
     if whatever == :clear
       @__additional_diagnostics = []
       whatever = nil
     end
-    
+
     @__additional_diagnostics += [whatever, block]  # note .compact will take care of them if they don't exist
   end
 
-  def assert(*args, &block)
-  #  This assertion calls a block, and faults if it returns
-  #  +false+ or +nil+. The fault diagnostic will reflect the
-  #  assertion's complete source - with comments - and will
-  #  reevaluate the every variable and expression in the
-  #  block.
-  #
-  #  The first argument can be a diagnostic string:
-  #
-  #    assert("foo failed"){ foo() }
-  #
-  #  The fault diagnostic will print that line.
-  # 
-  #  The next time you think to write any of these assertions...
-  #  
-  #  - +assert+
-  #  - +assert_equal+
-  #  - +assert_instance_of+
-  #  - +assert_kind_of+
-  #  - +assert_operator+
-  #  - +assert_match+
-  #  - +assert_not_nil+
-  #  
-  #  use <code>assert{ 2.1 }</code> instead.
-  #
-  #  If no block is provided, the assertion calls +assert_classic+,
-  #  which simulates RubyUnit's standard <code>assert()</code>.
-    if block
-      assert_ *args, &block
-    else
-      assert_classic *args
-    end
-    return true # or die trying ;-)
-  end
 
   module Coulor  #:nodoc:
     #  TODO  shell into term-ansicolor!
@@ -86,8 +52,8 @@ module Test; module Unit; module Assertions
       @@we_color = we_color
     end
     unless defined? BOLD
-      BOLD  = "\e[1m" 
-      CLEAR = "\e[0m" 
+      BOLD  = "\e[1m"
+      CLEAR = "\e[0m"
     end       # ERGO  modularize these; anneal with Win32
     def colour(text, colour_code)
       return colour_code + text + CLEAR  if colorize?
@@ -108,22 +74,24 @@ module Test; module Unit; module Assertions
     def blue(text); colour(text, "\e[34m"); end
     def orange(text); colour(text, "\e[3Bm"); end
   end
-  
+
   class RubyReflector
     attr_accessor :captured_block_vars,
                   :args
 
     include Coulor
-    
+
     def split_and_read(called)
+      return [] if called.nil?
+
       if called + ':' =~ /([^:]+):(\d+):/
         file, line = $1, $2.to_i
         return File.readlines(file)[line - 1 .. -1]
       end
-      
+
       return nil
     end
-    
+
     def __evaluate_diagnostics
       @__additional_diagnostics.each_with_index do |d, x|
         @__additional_diagnostics[x] = d.call if d.respond_to? :call
@@ -165,17 +133,17 @@ module Test; module Unit; module Assertions
     end
 
   end
-  
+
   def colorize(to_color)
     RubyReflector.new.colorize(to_color)
   end
 
-  #  TODO  work with raw MiniTest 
+  #  TODO  work with raw MiniTest
 
   # This is a copy of the classic assert, so your pre-existing
   # +assert+ calls will not change their behavior
   #
-  if defined? MiniTest::Assertion 
+  if defined? MiniTest::Assertion
     def assert_classic(test, msg=nil)
       msg ||= "Failed assertion, no message given."
       self._assertions += 1
@@ -185,7 +153,7 @@ module Test; module Unit; module Assertions
       end
       true
     end
-    
+
     def add_assertion
       self._assertions += 1
     end
@@ -203,7 +171,7 @@ module Test; module Unit; module Assertions
   #
   def assert_(diagnostic = nil, options = {}, &block)
     options[:keep_diagnostics] or add_diagnostic :clear
-    
+
     begin
       if got = block.call(*options[:args])
         add_assertion
@@ -215,7 +183,15 @@ module Test; module Unit; module Assertions
       add_exception got
     end
 
-    flunk diagnose(diagnostic, got, caller[1], options, block)
+    flunk_ diagnose(diagnostic, got, caller[1], options, block)
+  end
+
+  def flunk_ message
+    if respond_to? :flunk
+      flunk message
+    else
+      raise message
+    end
   end
 
   def add_exception(ex)
@@ -225,19 +201,19 @@ module Test; module Unit; module Assertions
   end
 
   #  This assertion replaces:
-  #  
+  #
   #  - +assert_nil+
   #  - +assert_no_match+
   #  - +assert_not_equal+
   #
   #  It faults, and prints its block's contents and values,
   #  if its block returns non-+false+ and non-+nil+.
-  #  
+  #
   def deny(diagnostic = nil, options = {}, &block)
       #  "None shall pass!" --the Black Knight
-      
+
     options[:keep_diagnostics] or add_diagnostic :clear
-    
+
     begin
       got = block.call(*options[:args]) or (add_assertion ; return true)
     rescue FlunkError
@@ -245,15 +221,15 @@ module Test; module Unit; module Assertions
     rescue => got
       add_exception got
     end
-  
-    flunk diagnose(diagnostic, got, caller[0], options, block)
+
+    flunk_ diagnose(diagnostic, got, caller[0], options, block)
   end  #  "You're a looney!"  -- King Arthur
 
   def deny_(diagnostic = nil, options = {}, &block)
       #  "None shall pass!" --the Black Knight
-      
+
     options[:keep_diagnostics] or add_diagnostic :clear
-    
+
     begin
       got = block.call(*options[:args]) or (add_assertion ; return true)
     rescue FlunkError
@@ -261,13 +237,13 @@ module Test; module Unit; module Assertions
     rescue => got
       add_exception got
     end
-  
-    flunk diagnose(diagnostic, got, caller[0], options, block)
+
+    flunk_ diagnose(diagnostic, got, caller[0], options, block)
   end  #  "You're a looney!"  -- King Arthur
 
 #  FIXME  document why this deny_ is here, and how to alias it back to deny
 
-  alias denigh deny  #  to line assert{ ... } and 
+  alias denigh deny  #  to line assert{ ... } and
                      #          denigh{ ... } statements up neatly!
 
   #~ def __reflect_assertion(called, options, block, got)
@@ -336,7 +312,56 @@ if RubyReflector::HAS_RUBYNODE
 
 end
 
-end ; end ; end
+end
+
+module Test
+  module Unit
+    class TestCase
+      include Assert2
+    end
+  end
+end
+
+module Test
+  module Unit
+    module Assertions
+      #  This assertion calls a block, and faults if it returns
+      #  +false+ or +nil+. The fault diagnostic will reflect the
+      #  assertion's complete source - with comments - and will
+      #  reevaluate the every variable and expression in the
+      #  block.
+      #
+      #  The first argument can be a diagnostic string:
+      #
+      #    assert("foo failed"){ foo() }
+      #
+      #  The fault diagnostic will print that line.
+      #
+      #  The next time you think to write any of these assertions...
+      #
+      #  - +assert+
+      #  - +assert_equal+
+      #  - +assert_instance_of+
+      #  - +assert_kind_of+
+      #  - +assert_operator+
+      #  - +assert_match+
+      #  - +assert_not_nil+
+      #
+      #  use <code>assert{ 2.1 }</code> instead.
+      #
+      #  If no block is provided, the assertion calls +assert_classic+,
+      #  which simulates RubyUnit's standard <code>assert()</code>.
+      def assert(*args, &block)
+        if block
+          assert_ *args, &block
+        else
+          assert_classic *args
+        end
+        return true # or die trying ;-)
+      end
+    end
+  end
+end
 
 class File
   def self.write(filename, contents)

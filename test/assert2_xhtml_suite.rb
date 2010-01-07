@@ -62,7 +62,7 @@ class AssertXhtmlSuite < Test::Unit::TestCase
       complaint =~ /Could not find this reference.../ and
       complaint.index(refered.to_html)
     end
-    
+
     assert complaint do
       complaint =~ /...in this sample.../
     end
@@ -81,7 +81,7 @@ class AssertXhtmlSuite < Test::Unit::TestCase
         complaint.index(refered.to_html)
     end
   end
-  
+
   def test_assert_xhtml_returns_its_node
     node = assert_xhtml SAMPLE_LIST do
       ul :style => 'font-size: 18'
@@ -89,7 +89,7 @@ class AssertXhtmlSuite < Test::Unit::TestCase
 
     assert{ node[:style] == 'font-size: 18' }
   end  #  TODO blog that we return the first top node!
- 
+
   def test_assert_xhtml_counts_its_shots
     assert_xhtml SAMPLE_LIST do
       ul :style => 'font-size: 18' do
@@ -101,9 +101,9 @@ class AssertXhtmlSuite < Test::Unit::TestCase
         end
       end
     end
-    
+
     @teh_scope_bug_be_fixed = 'Billings report'
-    
+
     assert_xhtml SAMPLE_LIST do |x|
       x.li /model/ do
         x.without! do
@@ -113,7 +113,7 @@ class AssertXhtmlSuite < Test::Unit::TestCase
         end
       end
     end
-    
+
     assert_xhtml_flunk SAMPLE_LIST do
       ul :style => 'font-size: 18' do
         li 'model' do
@@ -129,7 +129,7 @@ class AssertXhtmlSuite < Test::Unit::TestCase
     assert_xhtml SAMPLE_LIST do
       li 'model'
     end
-      
+
     assert_xhtml_flunk SAMPLE_LIST do
       li 'not found'
     end
@@ -154,7 +154,7 @@ class AssertXhtmlSuite < Test::Unit::TestCase
         li 'moodel'
       end
     end
-    
+
     @response = OpenStruct.new(:body => SAMPLE_LIST)
 
     assert_flunk /whatever .* moodel/mx do
@@ -182,11 +182,11 @@ class AssertXhtmlSuite < Test::Unit::TestCase
     bhw  = BeHtmlWith.create(SAMPLE_FORM)
     path = bhw.build_xpaths{ legend :xpath! => 'parent::fieldset' }.first
     denigh{ path == "//descendant::legend[ refer(., '0') ][ parent::fieldset ]" }
-    
+
     assert_xhtml SAMPLE_FORM do
       legend :xpath! => 'parent::fieldset'
     end
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       legend :xpath! => 'parent::noodles'
     end
@@ -224,9 +224,9 @@ class AssertXhtmlSuite < Test::Unit::TestCase
         end
       end
     end
-    
+
     #  TODO  verbose is supposed to work even if the inner html has a bug!
-    
+
   end
 
   def test_build_xpath
@@ -255,25 +255,25 @@ class AssertXhtmlSuite < Test::Unit::TestCase
     assert{ bhw.references[3] == built.doc.root.xpath('//label' ).first }
     assert{ bhw.references[4] == built.doc.root.xpath('//input').first }
   end
-  
+
   def assert_xhtml_flunk(sample, &block)
     assert_flunk /Could not find/ do
       assert_xhtml sample, &block
     end
   end
-  
+
   def test_nokogiri_builder_likes_bangs
     built = Nokogiri::HTML::Builder.new{ harlequin! }
     assert{ built.doc.to_html =~ /harlequin\!/ }
   end
-  
+
   def test_without!
     assert_xhtml SAMPLE_FORM do
       fieldset do
         legend 'Personal Information'
         li do
           without! do
-            libel 
+            libel
           end
         end
       end
@@ -286,20 +286,20 @@ class AssertXhtmlSuite < Test::Unit::TestCase
     assert_xhtml_flunk SAMPLE_FORM do
       without!{ fieldset }
     end
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       form{ without!{ fieldset } }
     end
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       without!{ fieldset }
       form{ without!{ fieldset } }
     end
-    
+
     bhw = BeHtmlWith.create(SAMPLE_FORM)
 
     paths = bhw.build_xpaths do
-              without! do  
+              without! do
                 fieldset
                 wax_museum
               end
@@ -307,24 +307,24 @@ class AssertXhtmlSuite < Test::Unit::TestCase
 
     path = paths.first
     assert{ path =~ /or descendant::wax_museum/ }
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       without! do
         fieldset
         wax_museum
       end
     end
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       form{ without!{ fieldset } }
       without!{ fieldset }
     end
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       form
       without!{ fieldset }
     end
-    
+
     assert_xhtml_flunk SAMPLE_FORM do
       fieldset do
         legend 'Personal Information'
@@ -345,14 +345,14 @@ class AssertXhtmlSuite < Test::Unit::TestCase
         end
       end
     end
-    
+
     #  TODO  more reality-check tests on without!
-    
+
     path = bhw.build_deep_xpath(built.doc.root)
     deny{ path =~ /descendant::without/ }
     assert(path){ path =~ / not\( descendant\:\:libel/ }
 #     p path
-#     assert{ built.doc.root.xpath_with_callback(path, :refer){|nodes, index| 
+#     assert{ built.doc.root.xpath_with_callback(path, :refer){|nodes, index|
 # p    nodes.map{|q|q.name}
 #       nodes}.length == 1 }
   end
@@ -375,31 +375,31 @@ class AssertXhtmlSuite < Test::Unit::TestCase
     p path
     assert{ built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.length == 1 }
     assert{ path.index("//fieldset[ ./descendant::legend") == 0 }
-    
-    path = "//fieldset[ 
-               descendant::legend[ 
-                following-sibling::*[ 
-                 descendant-or-self::li[ 
-                  descendant::label[ 
-                   following-sibling::*[ 
-                    descendant-or-self::br[ 
-                     following-sibling::*[ 
+
+    path = "//fieldset[
+               descendant::legend[
+                following-sibling::*[
+                 descendant-or-self::li[
+                  descendant::label[
+                   following-sibling::*[
+                    descendant-or-self::br[
+                     following-sibling::*[
                       descendant-or-self::input ] ] ] ] ] ] ] ]"
-    
-    path = "//li[ 
-                  descendant::label[ 
-                   following-sibling::*[ 
-                    descendant-or-self::br[ 
-                     following-sibling::*[ 
+
+    path = "//li[
+                  descendant::label[
+                   following-sibling::*[
+                    descendant-or-self::br[
+                     following-sibling::*[
                       descendant-or-self::input ] ] ] ] ]"
-    
+
     assert{ built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.length == 1 }
 p built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.first.name
     return
     assert{ path.index("./descendant::legend[ ./following-sibling::*[ ./descendant-or-self::li") == 0 }
     assert(path){ path.index("label[ refer(., '3') ]") }
     assert{ path =~ / \]/ }
-    
+
     return
     assert{ built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.length == 1 }
     assert{ bhw.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.length == 1 }
@@ -444,7 +444,7 @@ p built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.first.n
         any! 'Billings report'
       end
     end
-    
+
     assert_xhtml_flunk SAMPLE_LIST do
       without! do
         any! 'Billings report'
@@ -455,17 +455,17 @@ p built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.first.n
   def test_assert_xhtml_matches_ampersandage
     uri = 'http://kexp.org/playlist/newplaylist.aspx?t=1&year=2009&month=3&day=19&hour=7'
     sample_1 = "<div><a href='#{ uri }'>King Khan &amp; The Shrines</a></div>"
-    
+
 #      p RUBY_VERSION
-    
+
     built = Nokogiri::HTML::Builder.new{
                    div{ a(:href => uri) { text 'King Khan & The Shrines' } }
                  }
     sample_2 = built.doc.to_html
 #     puts sample_2
-    
+
     # TODO durst we do &mdash; ?
-    
+
     assert_xhtml sample_1 do  a 'King Khan & The Shrines'  end
     assert_xhtml sample_2 do  a 'King Khan & The Shrines'  end
 
@@ -482,7 +482,7 @@ p built.doc.root.xpath_with_callback(path, :refer){|nodes, index| nodes}.first.n
       ul{ li{ ul{ li 'Sales report'
                   li 'All Sales report criteria' } } }
     end
-    
+
     assert_xhtml SAMPLE_LIST do
       ul{ li{ ul{ li 'Sales report'
           without!{ li 'All Sales report criteria ' } } } }

@@ -1,7 +1,7 @@
 require 'test/unit'
 
 
-module Test; module Unit; module Assertions
+module Assert2
 
   # Assert that a block raises a given Exception type matching 
   # a given message
@@ -83,5 +83,5 @@ module Test; module Unit; module Assertions
   #      end
       end
 
-end; end; end
+end
 

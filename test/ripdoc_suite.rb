@@ -8,7 +8,7 @@ HomePath = Ripdoc::HomePath
 #  CONSIDER  think of a use for the horizontal accordion, and for nesting them
 #   TODO intersticial string mashers still don't color correctly
 #   TODO make function names bigger
-# FIXME optionally  complete paths on image URLs 
+# FIXME optionally  complete paths on image URLs
 
 
 class RipdocSuite < Test::Unit::TestCase
@@ -25,7 +25,7 @@ class RipdocSuite < Test::Unit::TestCase
     assert{ xpath(:span, style: 'display: none;').text.index('=begin') }
 
     xpath :div, :vertical_container do
-      xpath(:'h1[ @class = "accordion_toggle accordion_toggle_active" ]').text =~ 
+      xpath(:'h1[ @class = "accordion_toggle accordion_toggle_active" ]').text =~
                 /reinvents assert/
     end
 
@@ -34,14 +34,14 @@ class RipdocSuite < Test::Unit::TestCase
 
   def test_a_ripped_doc_contains_no_empty_pre_tags
     assert_xhtml Ripdoc.generate(HomePath + 'test/assert2_suite.rb', 'assert{ 2.0 }')
-    
+
     xpath :div, :content do
       deny{ @xdoc.to_s =~ /<pre>\s*<\/pre>/m }
     end
   end
-  
+
   #  CONSIDER  something is snarfing the first space in a pre in a embdoc
-  
+
   def test_snarf_all_shebang_commentary
     @rip.on_comment('#!whatever', @f)
     @rip.on_comment('  #!whatever', @f)
@@ -51,7 +51,7 @@ class RipdocSuite < Test::Unit::TestCase
   def test_mark_comments_up
     @rip.on_comment('# ooh girl I t\'ink ya need a <code>Rasta</code>man!', @f)
    _assert_xml @output
-   
+
     xpath '/span' do |span|
       span.attributes['style'] =~ /font-family: Times;/ and
       span[:style] =~ /font-family: Times;/ and
@@ -62,9 +62,9 @@ class RipdocSuite < Test::Unit::TestCase
   def test_embdocs_form_accordions_with_contents
     xhtml = Ripdoc.generate(HomePath + 'test/assert2_suite.rb', 'assert{ 2.0 }')
     assert_xhtml xhtml
-    
+
     xpath :div, :vertical_container do
-      xpath(:'div[ @class = "accordion_content" ]/p').text =~ 
+      xpath(:'div[ @class = "accordion_content" ]/p').text =~
                 /complete, formatted report/
     end
 
@@ -173,7 +173,7 @@ class RipdocSuite < Test::Unit::TestCase
              :onclick => 'raise("froot")'
     end
 
-    xpath :a, :href => '#froot', 
+    xpath :a, :href => '#froot',
      # CONSIDER  :onclick => 'raise("froot")', # should not emit NoMethodError: undefined method `inject' for true:TrueClass>".
            :'.' => :loop do
       xpath :em, :'.' => :op
@@ -230,7 +230,7 @@ class RipdocSuite < Test::Unit::TestCase
     assert_xhtml xhtml
     return xhtml
   end
-  
+
   def assert_rip_page(line)
     @sauce = Ripdoc.compile(line)
     line = @sauce
@@ -247,7 +247,7 @@ class RipdocSuite < Test::Unit::TestCase
     line = assert_rip( "x = 42\n" +
                        "#!nodoc!\n" +
                        "y = 43\n"
-                      ) 
+                      )
     assert{ xpath :span, ?. => 'x'  }
     assert{ xpath :span, ?. => '42' }
     denigh{ xpath :span, ?. => '#!nodoc!' }
@@ -280,7 +280,7 @@ class RipdocSuite < Test::Unit::TestCase
     line = assert_rip( "p 'rev\n" +
                        "    o\n" +
                        " lution'\n"
-                      ) 
+                      )
     assert{ xpath :span, ?. =>    'rev'  }
     assert{ xpath :span, ?. =>     'o'   }
     assert{ xpath :span, ?. =>  'lution' }
@@ -291,7 +291,7 @@ class RipdocSuite < Test::Unit::TestCase
     @rip.spans_owed = 0
     @rip.on_tstring_end("'", f)
    _assert_xml f
-   
+
     assert do
       xpath("/span[ contains(@style, 'background-color') ]").text == "'"
     end
@@ -303,7 +303,7 @@ class RipdocSuite < Test::Unit::TestCase
     @rip.spans_owed = 0
     @rip.on_tstring_end("  bug'", f)
    _assert_xml "<x>#{f}</x>"
-   
+
     assert do
       xpath("/x"        ).text == "  " and
       xpath("/x/span[1]").text == "bug" and
@@ -316,7 +316,7 @@ class RipdocSuite < Test::Unit::TestCase
     @rip.spans_owed = 0
     @rip.on_tstring_end("bug'", f)
    _assert_xml "<x>#{f}</x>"
-   
+
     xpath '/x' do
       xpath('span[1]').text == "bug" and
       xpath('span[2]').text == "'"
@@ -331,7 +331,7 @@ class RipdocSuite < Test::Unit::TestCase
 
   def test_put_every_thing_into_a_pre_block
     lines = assert_rip('x = 42')
-    
+
     xpath :div, :content do
       xpath 'pre/span'
     end
@@ -340,7 +340,7 @@ class RipdocSuite < Test::Unit::TestCase
   def style(kode)
     "@style = '#{Ripdoc::STYLES[kode]}'"
   end
-  
+
   def test_string_patterns
     assert_rip('foo "bar"')
     denigh{ xpath :'span[ @class = "string" ]' }
@@ -372,7 +372,7 @@ puts @xdoc.to_s
 
   def test_regexp_patterns
     assert_rip('foo /bar/')
-    
+
     xpath :"span[ #{style(:regexp)} and contains(., 'bar')  ]" do
       xpath "span[ #{style(:regexp_delimiter)} and contains(., '/') ]"
     end
@@ -380,7 +380,7 @@ puts @xdoc.to_s
 
   def test_regexps_are_purple
     assert_rip('foo /bar/')
-    
+
     xpath :span, ?. => :bar do |span|
       span[:style] == 'background: url(images/hot_pink.png);'
     end
@@ -388,10 +388,9 @@ puts @xdoc.to_s
 
   def reveal(xhtml = @sauce || @output, filename)  #  TODO  take out the default arguments
     path = HomePath + 'doc' + filename
-    File.write(path, xhtml)  
+    File.write(path, xhtml)
     path = path.relative_path_from(Pathname.pwd)
     system "\"C:/Program Files/Mozilla Firefox/firefox.exe\" #{path} &"
   end
-  
-end
 
+end

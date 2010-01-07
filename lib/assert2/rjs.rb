@@ -6,7 +6,7 @@ require 'rkelly/nodes/postfix_node'
 require 'rkelly'
 require 'assert2/xhtml'
 
-module Test; module Unit; module Assertions
+module Assert2
 
   class AssertRjs
     def initialize(js, command, scope)
@@ -223,7 +223,7 @@ module Test; module Unit; module Assertions
 #   TODO  also crack out the args correctly and gripe if they wrong
 #  TODO TDD the @matcher can be a string or regexp
 
-end; end; end
+end
 
 module Spec; module Matchers
 
