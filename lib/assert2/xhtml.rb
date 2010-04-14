@@ -60,12 +60,26 @@ requirements:
 
 require 'nokogiri'
 
-class BeHtmlWith
+module Rspec
+module Matchers
 
-  def initialize(scope, &block)
+class BeXHtmlWith
+  def initialize(scope, mode, &block)
     @scope, @block = scope, block
     @references = []
     @spewed = {}
+    @mode = mode
+
+    case @mode
+    when :xml  ; @displ_method = :to_xml
+    when :html ; @displ_method = :to_xhtml
+    else       ; @displ_method = :to_xml
+    end
+
+  end
+
+  def matches?(stwing, &block)
+    true
   end
 
   attr_accessor :builder,
@@ -81,12 +95,12 @@ class BeHtmlWith
   def matches?(stwing, &block)
     @block ||= block  #  ERGO  test that ||= - preferrably with a real RSpec suite!
 
-    @scope.wrap_expectation self do
+#    @scope.wrap_expectation self do
       @doc = Nokogiri::HTML(stwing)
       return run_all_xpaths(build_xpaths)
-    end
+#    end
   end
- 
+
   def build_xpaths(&block)
     bwock = block || @block || proc{} #  CONSIDER  what to do with no block? validate?
     @builder = Nokogiri::HTML::Builder.new(&bwock)
@@ -206,7 +220,7 @@ class BeHtmlWith
       puts
       puts '-' * 60
       p yo_path
-      puts @sample.to_xhtml
+      puts @sample.send(@displ_method)
       @spewed[yo_path] = true
     end
   end  #   ERGO  this could use a test...
@@ -273,11 +287,12 @@ class BeHtmlWith
   def complain( refered = @builder.doc, 
                  sample = @best_sample || @doc.root )
            #  ERGO  use to_xml? or what?
-    @failure_message = "#{message}\n".lstrip +
+
+    @failure_message = "#{message.lstrip}\n" +
                        "\nCould not find this reference...\n\n" +
-                          refered.to_xhtml.sub(/^\<\!DOCTYPE.*/, '') +
+                          refered.send(@displ_method)
                      "\n\n...in this sample...\n\n" +
-                          sample.to_xml
+                          sample.send(@displ_method)
   end
 
   def build_deep_xpath_too(element)
@@ -312,12 +327,23 @@ class BeHtmlWith
     "please don't negate - use without!"
   end
   
-end
+  end
 
+  def be_xml_with(&block)
+    BeXHtmlWith.new(self, :xml, &block)
+  end
+
+  def be_html_with(&block)
+    BeXHtmlWith.new(self, :html, &block)
+  end
+end
+end
 
 module Test; module Unit; module Assertions
 
-  def wrap_expectation whatever;  yield;  end unless defined? wrap_expectation
+  def wrap_expectation whatever
+    yield
+  end unless defined? wrap_expectation
 
   def assert_xhtml(*args, &block)  # ERGO merge
     xhtml, message = args
@@ -328,7 +354,7 @@ module Test; module Unit; module Assertions
     end
     
     if block
-      matcher = BeHtmlWith.new(self, &block)
+      matcher = BeXHtmlWith.new(self, :html, &block)
       matcher.message = message
       matcher.matches?(xhtml, &block)
       message = matcher.failure_message
@@ -341,13 +367,6 @@ module Test; module Unit; module Assertions
   end
 
 end; end; end
-
-module Spec; module Matchers
-  def be_html_with(&block)
-    BeHtmlWith.new(self, &block)
-  end
-end; end
-
 
 class Nokogiri::XML::Node
 
