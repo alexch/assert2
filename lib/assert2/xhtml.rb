@@ -60,7 +60,7 @@ requirements:
 
 require 'nokogiri'
 
-module Rspec
+module RSpec
 module Matchers
 
 class BeXHtmlWith
@@ -73,9 +73,8 @@ class BeXHtmlWith
     case @mode
     when :xml  ; @displ_method = :to_xml
     when :html ; @displ_method = :to_xhtml
-    else       ; @displ_method = :to_xml
+    else       ; raise 'Unsupported mode'
     end
-
   end
 
   def matches?(stwing, &block)
@@ -96,14 +95,22 @@ class BeXHtmlWith
     @block ||= block  #  ERGO  test that ||= - preferrably with a real RSpec suite!
 
 #    @scope.wrap_expectation self do
-      @doc = Nokogiri::HTML(stwing)
-      return run_all_xpaths(build_xpaths)
+    case @mode
+    when :xml  ; @doc = Nokogiri::XML(stwing)
+    when :html ; @doc = Nokogiri::HTML(stwing)
+    end
+
+    return run_all_xpaths(build_xpaths)
 #    end
   end
 
   def build_xpaths(&block)
     bwock = block || @block || proc{} #  CONSIDER  what to do with no block? validate?
-    @builder = Nokogiri::HTML::Builder.new(&bwock)
+
+    case @mode
+    when :xml  ; @builder = Nokogiri::XML::Builder.new(&bwock)
+    when :html ; @builder = Nokogiri::HTML::Builder.new(&bwock)
+    end
 
     elemental_children.map do |child|
       build_deep_xpath(child)
@@ -130,7 +137,7 @@ class BeXHtmlWith
   def build_xpath(element)
     count = @references.length
     @references << element  #  note we skip the without @reference!
-    
+
     if element.name == 'without!'
       return 'not( ' + build_predicate(element, 'or') + ' )'
     else
@@ -269,7 +276,7 @@ class BeXHtmlWith
 
   def get_texts(element)
    element.children.grep(Nokogiri::XML::Text).
-      map{|x|x.to_s.strip}.select{|x|x.any?}
+      map{|x|x.to_s.strip} # .select{|x|x.empty?}
   end
 
   def collect_best_sample(samples)
@@ -288,9 +295,9 @@ class BeXHtmlWith
                  sample = @best_sample || @doc.root )
            #  ERGO  use to_xml? or what?
 
-    @failure_message = "#{message.lstrip}\n" +
+    @failure_message = "#{message ? message.lstrip : ''}\n" +
                        "\nCould not find this reference...\n\n" +
-                          refered.send(@displ_method)
+                          refered.send(@displ_method) +
                      "\n\n...in this sample...\n\n" +
                           sample.send(@displ_method)
   end
@@ -317,8 +324,8 @@ class BeXHtmlWith
                 '[ ./following-sibling::*[ ./descendant-or-self::' + build_xpath_too(child) + ' ] ]'
                }.join #(' and .')
     end
-       path << ' and ' if element_kids.any?
 
+    path << ' and ' if element_kids.any?
     path << "refer(., '#{ count }') ]"  #  last so boolean short-circuiting optimizes
     return path
   end
